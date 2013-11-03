@@ -14,6 +14,9 @@ my $QUIET = undef;
 my $LANG = undef;
 my $OUTFILE = undef;
 
+my $find = '/bin/find'; # cygwin hack
+my $cl = "cl.exe";
+
 GetOptions( 'p|pattern=s'   => \$PATTERN,
             'l|lang=s'      => \$LANG,
             'd|directory=s' => \$DIRNAME,
@@ -27,140 +30,119 @@ sub say {
     print "|[count]|: $_[0]\n" if !$QUIET;
 }
 
-my $log = defined $OUTFILE? $OUTFILE : "lines.txt";
-my @matches;
-my $pattern;
-my $lang;
-
-if (!defined $LANG && !defined $PATTERN)
-{
-    $lang = "text";
-    $pattern = "[.].*\$";
-}
-elsif (!defined $LANG)
-{
-    $pattern = $PATTERN;
-    $lang = "/$pattern/";
-} 
-else
-{
-    given($LANG)
-    {
-        when(m/as3/i)
-        {
-            $lang = "ActionScript3";
-            $pattern = '[.](as)$';
-        }
-        when(m/scala/i) 
-        {
-            $lang = "scala";
-            $pattern = '[.](java|scala)$';
-        }
-        when(m/java/i)
-        {
-            $lang = "java";
-            $pattern = '[.]java$';
-        } 
-        when(m/c#|cs/i)
-        {
-            $lang = "C#";
-            $pattern = '[.]cs$';
-        }
-        when(m/c\+\+/i)
-        {
-            $lang = "C++";
-            $pattern = '[.](cpp|h|hpp|cxx|hxx)$';
-        }
-        when(m/c/i)
-        {
-            $lang = "C";
-            $pattern = '[.](c|h|l|y)$';
-        }
-        when(m/python/i)
-        {
-            $lang = "Python";
-            $pattern = '[.](py|pyw)$';
-        }
-        when(m/perl/i)
-        {
-            $lang = "Perl";
-            $pattern = '[.](pl|pm|plx)$';
-        }
-        when(m/ocaml/i)
-        {
-            $lang = "OCaml";
-            $pattern = '[.](ml|mli|sml|thy|mly|mll)$';
-        }
-        when(m/asm|assembly/i) 
-        {
-            $lang = "Assembly";
-            $pattern = '[.](s|asm|sml|thy)$';
-        }
-        when(m/shell|sh|bash|ksh|csh/i)
-        {
-            $lang = "sh";
-            $pattern = '[.]([kbc]?sh)$';
-        }
-        default
-        {
-            $lang = "text";
+sub chooseLanguage {
+    my ($lang, $pattern) = @_;
+    if (!defined $lang && !defined $pattern) {
+        return ("text", "[.].*\$");
+    } elsif (!defined $lang) {
+        return ("(pattern)", "/$pattern/");
+    } else {
+        given($lang) {
+            when(m/as3/i) {
+                return ("ActionScript3", '[.](as)$');
+            }
+            when(m/scala/i) {
+                return ("scala", '[.](java|scala)$');
+            }
+            when(m/java/i) {
+                return ("java", '[.]java$');
+            } 
+            when(m/c#|cs/i) {
+                return ("C#", '[.]cs$');
+            }
+            when(m/c\+\+/i) {
+                return ("C++", '[.](cpp|h|hpp|cxx|hxx)$');
+            }
+            when(m/c/i) {
+                return ("C", '[.](c|h|l|y)$');
+            }
+            when(m/python/i) {
+                return ("Python", '[.](py|pyw)$');
+            }
+            when(m/perl/i) {
+                return ("Perl", '[.](pl|pm|plx)$');
+            }
+            when(m/ocaml/i) {
+                return ("OCaml", '[.](ml|mli|sml|thy|mly|mll)$');
+            }
+            when(m/asm|assembly/i) {
+                return ("Assembly", '[.](s|asm|sml|thy)$');
+            }
+            when(m/shell|sh|bash|ksh|csh/i) {
+                return ("sh", '[.]([kbc]?sh)$');
+            }
+            when(m/hs|lhs/i) {
+                return ("Haskell", '[.]([l]?hs)$');
+            }
+            default {
+                return ("text", $pattern);
+            }
         }
     }
 }
 
 
-say "Matching $lang files";
-chdir $DIRNAME if defined $DIRNAME;
+
+
 
 sub count_lines {
     my $regex = $_[0];
     my $result = "";
     my @all = ();
-    foreach my $file (grep /$regex/,`/bin/find .`)
-    {
+    foreach my $file (grep /$regex/,`$find .`) {
         chomp $file;
-        #$file =~ s/ /\\ /g;
         push @all, "\"$file\"";
     }
     my $joined = join(" ", @all);
-    my @result = `cl.exe $joined`;
+    my @result = `$cl $joined`;
     return @result;
 }
 
-
-#my $text = `cl.exe -l < @matches`;
-my @lines = count_lines($pattern);
-my $cnt = scalar @lines;
-my $total = 0;
-my @formatted_lines = ();
-foreach my $line (@lines)
-{
-    chomp $line;
-    my @entry = split /,/, $line, 2;
-    my $num = $entry[0];
-    my $name = $entry[1];
-    my $base = basename $name;
-    my $type = $base;
-    $type =~ s/[^.]*[.](.*)/$1/;
-    my $formatted = sprintf "%6s%04d [%5s] $base\n", "", $num, $type;
-    push(@formatted_lines, $formatted);
-    $total += $num;
-}
-
-if ($QUIET)
-{
-    print "$total\n";
-}
-else 
-{
-    foreach my $line (sort @formatted_lines)
-    {
-        print $line;
+sub outputLines {
+    my $log = shift @_;
+    my $lang = shift @_;
+    my @lines = @_;
+    my $cnt = scalar @lines;
+    my $total = 0;
+    my @formatted_lines = ();
+    foreach my $line (@lines) {
+        chomp $line;
+        my @entry = split /,/, $line, 2;
+        my $num = $entry[0];
+        my $name = $entry[1];
+        my $base = basename $name;
+        my $type = $base;
+        $type =~ s/[^.]*[.](.*)/$1/;
+        my $formatted = sprintf "%6s%04d [%5s] $base\n", "", $num, $type;
+        push(@formatted_lines, $formatted);
+        $total += $num;
     }
-    printf "\n%10s [%5s] TOTAL\n", $total, $lang;
+
+    if (!$QUIET) {
+        foreach my $line (sort @formatted_lines) {
+            print $line;
+        }
+        printf "\n%10s [%5s] TOTAL\n", $total, $lang;
+    }
+
+    system("echo $total, `date +%s` >> $log");
 }
 
-system("echo $total, `date +%s` >> $log");
+sub main {
+
+    my $log = defined $OUTFILE? $OUTFILE : "lines.txt";
+    my @matches;
+    my ($lang, $pattern) = chooseLanguage($LANG, $PATTERN);
+    say "Matching $lang files";
+    chdir $DIRNAME if defined $DIRNAME;
+
+    my @lines = count_lines($pattern);
+    outputLines($log, $lang, @lines);
+}
+
+main()
+
+
 
 __END__
 =head1 NAME
