@@ -71,7 +71,7 @@ sub chooseLanguage {
             when(m/shell|sh|bash|ksh|csh/i) {
                 return ("sh", '[.]([kbc]?sh)$');
             }
-            when(m/hs|lhs/i) {
+            when(m/haskell|hs|lhs/i) {
                 return ("Haskell", '[.]([l]?hs)$');
             }
             default {
@@ -133,6 +133,10 @@ sub main {
     my $log = defined $OUTFILE? $OUTFILE : "lines.txt";
     my @matches;
     my ($lang, $pattern) = chooseLanguage($LANG, $PATTERN);
+    if (! (defined $lang) || !(defined $pattern)) {
+        say "unknown language: $LANG";
+        exit(1);
+    }
     say "Matching $lang files";
     chdir $DIRNAME if defined $DIRNAME;
 
