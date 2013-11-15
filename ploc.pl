@@ -14,8 +14,8 @@ my $QUIET = undef;
 my $LANG = undef;
 my $OUTFILE = undef;
 
-my $find = '/bin/find'; # cygwin hack
-my $cl = "cl.exe";
+my $find = '/bin/find'; 
+my $cl = "/bin/cl";# cygwin hacks
 
 GetOptions( 'p|pattern=s'   => \$PATTERN,
             'l|lang=s'      => \$LANG,
