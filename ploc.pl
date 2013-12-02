@@ -41,10 +41,10 @@ sub chooseLanguage {
                 return ("ActionScript3", '[.](as)$');
             }
             when(m/scala/i) {
-                return ("scala", '[.](java|scala)$');
+                return ("Scala", '[.](java|scala)$');
             }
             when(m/java/i) {
-                return ("java", '[.]java$');
+                return ("Java", '[.]java$');
             }
             when(m/c#|cs/i) {
                 return ("C#", '[.]cs$');
@@ -68,7 +68,7 @@ sub chooseLanguage {
                 return ("Assembly", '[.](s|asm|sml|thy)$');
             }
             when(m/shell|sh|bash|ksh|csh/i) {
-                return ("sh", '[.]([kbc]?sh)$');
+                return ("shell", '[.]([kbc]?sh)$');
             }
             when(m/haskell|hs|lhs/i) {
                 return ("Haskell", '[.]([l]?hs)$');
