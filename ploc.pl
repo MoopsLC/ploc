@@ -14,7 +14,7 @@ my $QUIET = undef;
 my $LANG = undef;
 my $OUTFILE = undef;
 
-my $find = '/bin/find'; 
+my $find = '/bin/find';
 my $cl = "/bin/cl";# cygwin hacks
 
 GetOptions( 'p|pattern=s'   => \$PATTERN,
@@ -23,7 +23,7 @@ GetOptions( 'p|pattern=s'   => \$PATTERN,
             'q|quiet'       => \$QUIET,
             'o|out=s'       => \$OUTFILE,
             'h|help'        => \$HELP);
-            
+
 pod2usage(1) if $HELP;
 
 sub say {
@@ -46,7 +46,7 @@ sub chooseLanguage {
             }
             when(m/java/i) {
                 return ("java", '[.]java$');
-            } 
+            }
             when(m/c#|cs/i) {
                 return ("C#", '[.]cs$');
             }
@@ -74,15 +74,15 @@ sub chooseLanguage {
             when(m/haskell|hs|lhs/i) {
                 return ("Haskell", '[.]([l]?hs)$');
             }
+            when(m/idris|idr/i) {
+                return ("Idris", '[.](c|h|[l]?idr)');
+            }
             default {
                 return ("text", $pattern);
             }
         }
     }
 }
-
-
-
 
 
 sub count_lines {
@@ -156,8 +156,8 @@ report - This is what it does
 
 count [OPTIONS]
 
-Counts the number of lines present in files. By default, searches the current 
-directory for all files and counts the number of '$/' separated lines. The 
+Counts the number of lines present in files. By default, searches the current
+directory for all files and counts the number of '$/' separated lines. The
 search may be refined by a choice of directory, language, or user specified
 pattern.
 
@@ -183,7 +183,7 @@ Search only in directory DIR. Default: current directory.
 
 =item B<-p PATTERN>
 
-Use PATTERN to search for files to count. 
+Use PATTERN to search for files to count.
 
 =back
 
