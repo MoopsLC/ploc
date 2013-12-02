@@ -89,6 +89,7 @@ sub count_file {
     my $filename = $_[0];
     my $lines = 0;
     my $buffer;
+    #thank you to nuance from perlmonks
     open(my $handle, $filename) or die "Failed to open $filename";
     while (sysread $handle, $buffer, 4096) {
         $lines += ($buffer =~ tr/\n//);
