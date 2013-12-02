@@ -14,8 +14,7 @@ my $QUIET = undef;
 my $LANG = undef;
 my $OUTFILE = undef;
 
-my $find = '/bin/find';
-my $cl = "/bin/cl";# cygwin hacks
+my $find = '/bin/find';# cygwin hack
 
 GetOptions( 'p|pattern=s'   => \$PATTERN,
             'l|lang=s'      => \$LANG,
@@ -75,7 +74,7 @@ sub chooseLanguage {
                 return ("Haskell", '[.]([l]?hs)$');
             }
             when(m/idris|idr/i) {
-                return ("Idris", '[.](c|h|[l]?idr)');
+                return ("Idris", '[.]([l]?idr)');
             }
             default {
                 return ("text", $pattern);
@@ -85,16 +84,28 @@ sub chooseLanguage {
 }
 
 
+
+sub count_file {
+    my $filename = $_[0];
+    my $lines = 0;
+    my $buffer;
+    open(my $handle, $filename) or die "Failed to open $filename";
+    while (sysread $handle, $buffer, 4096) {
+        $lines += ($buffer =~ tr/\n//);
+    }
+    close $handle;
+    return "$lines,$filename";
+}
+
 sub count_lines {
     my $regex = $_[0];
     my $result = "";
     my @all = ();
     foreach my $file (grep /$regex/,`$find .`) {
         chomp $file;
-        push @all, "\"$file\"";
+        push @all, "$file";
     }
-    my $joined = join(" ", @all);
-    my @result = `$cl $joined`;
+    my @result = map(count_file($_), @all);
     return @result;
 }
 
@@ -102,7 +113,6 @@ sub outputLines {
     my $log = shift @_;
     my $lang = shift @_;
     my @lines = @_;
-    my $cnt = scalar @lines;
     my $total = 0;
     my @formatted_lines = ();
     foreach my $line (@lines) {
