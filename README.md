@@ -3,7 +3,7 @@ ploc
 
 Count lines of code based on a pattern.
 
-Everyone know that lines of code are the most important measure of, 
+Everyone knows that lines of code are the most important measure of, 
 well pretty much anything having to do with software. More is more! 
 Gamify programming! Numbers! Let's count them!
 
