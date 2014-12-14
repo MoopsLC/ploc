@@ -34,7 +34,7 @@ sub chooseLanguage {
     if (!defined $lang && !defined $pattern) {
         return ("text", "[.].*\$");
     } elsif (!defined $lang) {
-        return ("(pattern)", "/$pattern/");
+        return ("text", "$pattern");
     } else {
         given($lang) {
             when(m/as3/i) {
